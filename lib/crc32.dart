@@ -8,6 +8,8 @@
 
 library crc32;
 
+import 'dart:async';
+
 /**
  * Computes cyclic redundancy check values.
  */
@@ -88,4 +90,26 @@ class CRC32 {
 
     return crc;
   }
+  
+  /**
+   * Computes a CRC32 value for the given stream.
+   *
+   * The return value is an unsigned integer.
+   */
+  
+  static Future<int> computeStream(Stream<List<int>> stream, [int crc = 0]){
+    crc = crc ^ (-1);
+    return stream.forEach((bytes){
+      bytes.forEach((byte){
+        var x = CRC32._table[(crc ^ byte) & 0xFF];
+        crc = (crc & 0xffffffff) >> 8; // crc >>> 8 (32-bit unsigned integer)
+        crc ^= x;      
+      });
+    }).then((_){
+      crc = crc ^ (-1);
+      if (crc < 0) crc += 4294967296;
+      return crc;
+    });
+  }
+  
 }
